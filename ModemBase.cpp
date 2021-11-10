@@ -10,10 +10,12 @@ License: http://hayesduino.codeplex.com/license
 #include "Ethernet.h"
 #include "HardwareSerial.h"
 
-#define DEBUG 1
+#define DEBUG 0
+
 #if DEBUG == 1
 #include "Logger.h"
 #endif
+
 #include "EEPROM.h"
 
 #ifdef UBRR1H
@@ -22,7 +24,6 @@ License: http://hayesduino.codeplex.com/license
 #else
 #define __UNO__
 #endif
-
 
 int ModemBase::getString(EthernetClient *client, char *buffer, int maxLength)
 {
@@ -159,9 +160,9 @@ void ModemBase::saveDefaults(void)
 
 void ModemBase::loadDefaults(void)
 {
-	if(EEPROM.read(MODEM_INITIALIZED_ADDRESS) == MODEM_INITIALIZED_STATE)
+	if(EEPROM.read(MODEM_INITIALIZED_ADDRESS) == MODEM_INITIALIZED_STATE) //Do we have values saved?
 	{
-		_echoOn = (bool)EEPROM.read(E_MODE_ADDRESS);
+		_echoOn = (bool)EEPROM.read(E_MODE_ADDRESS);                        //Yes, Load Value
 		_verboseResponses = (bool)EEPROM.read(V_MODE_ADDRESS);
 		_quietMode = (bool)EEPROM.read(Q_MODE_ADDRESS);
 
@@ -189,12 +190,12 @@ void ModemBase::loadDefaults(void)
 	}
 	else
 	{
-		resetToDefaults();
+		resetToDefaults();                                              //No, Setup factory defaults
 	}
 }
 
-void ModemBase::begin(
-	HardwareSerial *serial, 
+void ModemBase::begin(                                  //Begin ModemBase Function
+	HardwareSerial *serial,                               
 	void (*onDisconnectHandler)(EthernetClient *client),
 	void (*onDialoutHandler)(char*, ModemBase*))
 {
@@ -223,9 +224,9 @@ void ModemBase::begin(
 	_isConnected = false;
 	_isRinging = false;
 
-	loadDefaults();
+	loadDefaults();                                       //Load Modem Values 
 
-	setLineSpeed();
+	setLineSpeed();                                       //Set Line Speed
 
 	digitalWrite(DCE_DTR, toggleCarrier(false));
 	digitalWrite(DCE_RTS, HIGH);
@@ -239,6 +240,7 @@ void ModemBase::begin(
 #else
 	println(F("HAYESDUINO EXTENDED SET READY."));
 #endif
+
 #if DEBUG == 1
 		lggr.println(F("Modem initialized."));
 #endif
@@ -342,41 +344,42 @@ void ModemBase::writeAddressBook(uint16_t address, char * host)
 	}
 }
 
-char * ModemBase::getAddressBook(uint16_t address)
+char * ModemBase::getAddressBook(uint16_t address)                    //Should work for the spoof address book as well
 {
-	static char result[91];
-	for(int i=0; i < 90; ++i)
-	{
-		result[i] = EEPROM.read(address + i);
-	}
+  static char result[91];
+  for(int i=0; i < 90; ++i)
+  {
+    result[i] = EEPROM.read(address + i);
+  }
 
-	return result;
+  return result;
 }
-#ifndef __UNO__
-bool ModemBase::processCommandBufferExtended(EthernetClient *client)
-{
-	bool result = false, showOK = false;
-	char msg[41];
 
-	if(strcmp(_commandBuffer, "ATS0?") == 0)
-	{
-		sprintf(msg, "%u", _S0_autoAnswer);
+#ifndef __UNO__
+bool ModemBase::processCommandBufferExtended(EthernetClient *client)  //Process Extended Commands Extra Feedback
+{                                                                     //Prints the value of e.q. ATS100? prints the address at 100
+	bool result = false, showOK = false;
+	char msg[41];                                                       //Command line size
+                                                                      //strcmp returns 0 if it's equal. ? is a wildcard and can be any character
+	if(strcmp(_commandBuffer, "ATS0?") == 0)                            //ATS0x  = Auto Answer (x=0 immediate, x>0 use ATS1x value) (Not implemented yet)
+	{                                                                    
+		sprintf(msg, "%u", _S0_autoAnswer);                               //sprintf is format print where %u = unsigned integer pointer to character 
 		_serial->println(msg);
 		result = true;
 	}
-	else if(strcmp(_commandBuffer, ("ATS999?")) == 0)
+	else if(strcmp(_commandBuffer, ("ATS999?")) == 0)                   //Useless command, why? Prints HAYESDUINO EXTENDED SET to computer
 	{
 		_serial->println(F("HAYESDUINO EXTENDED SET"));
 	}
 	else
-	if(strcmp(_commandBuffer, "ATS1?") == 0)
+	if(strcmp(_commandBuffer, "ATS1?") == 0)                            //ATS1x where x = Number of rings for Auto Answer (See above)
 	{
 		sprintf(msg, "%u", _S1_ringCounter);
 		_serial->println(msg);
 		result = true;
 	}
 	else
-	if(strcmp(_commandBuffer, "ATS2?") == 0)
+	if(strcmp(_commandBuffer, "ATS2?") == 0)                            
 	{
 		sprintf(msg, "%u", _S2_escapeCharacter);
 		_serial->println(msg);
@@ -571,7 +574,7 @@ bool ModemBase::processCommandBufferExtended(EthernetClient *client)
 		result = true;
 	}
 	else
-	if(strcmp(_commandBuffer, "ATS3060?") == 0)
+	if(strcmp(_commandBuffer, "ATS306?") == 0)
 	{
 		char byte = EEPROM.read(6);
 		sprintf(msg, "%u", byte);
@@ -675,65 +678,92 @@ bool ModemBase::processCommandBufferExtended(EthernetClient *client)
 		result = true;
 	}
 	else
-	if(strcmp(_commandBuffer, "ATS101?") == 0)
-	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_1));
-		_serial->println(msg);
-		result = true;
-	}
-	else
+  if(strcmp(_commandBuffer, "ATS100?") == 0)
+  {
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_0));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_0));
+    _serial->println(msg);
+    result = true;
+  }
+  else
+  if(strcmp(_commandBuffer, "ATS101?") == 0)
+  {
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_1));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_1));
+    _serial->println(msg);
+    result = true;
+  }
+  else
 	if(strcmp(_commandBuffer, "ATS102?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_2));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_2));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_2));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS103?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_3));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_3));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_3));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS104?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_4));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_4));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_4));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS105?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_5));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_5));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_5));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS106?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_6));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_6));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_6));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS107?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_7));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_7));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_7));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS108?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_8));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_8));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_8));
 		_serial->println(msg);
 		result = true;
 	}
 	else
 	if(strcmp(_commandBuffer, "ATS109?") == 0)
 	{
-		sprintf(msg, "%s", getAddressBook(ADDRESS_BOOK_9));
+    sprintf(msg, "Address: %s    ", getAddressBook(ADDRESS_BOOK_9));
+    _serial->print(msg);
+    sprintf(msg, "Phone: %s    ", getAddressBook(SPOOF_9));
 		_serial->println(msg);
 		result = true;
 	}
@@ -748,24 +778,25 @@ bool ModemBase::processCommandBufferExtended(EthernetClient *client)
 }
 #endif
 
+
 void ModemBase::processCommandBuffer(EthernetClient *client)
 {
-	for(int i=0; i < strlen(_commandBuffer); ++i)
+	for(int i=0; i < strlen(_commandBuffer); ++i)           //Make the command buffer all upper case
 	{
-		_commandBuffer[i] = toupper(_commandBuffer[i]);
+		_commandBuffer[i] = toupper(_commandBuffer[i]);       //To Upper
 	}
 
-	if(strcmp(_commandBuffer, ("AT/")) == 0)
+	if(strcmp(_commandBuffer, ("AT/")) == 0)                //Repeat last command
 	{
 		strcpy(_commandBuffer, _lastCommandBuffer);
 	}
 
-	if(strcmp(_commandBuffer, ("ATZ")) == 0)
+	if(strcmp(_commandBuffer, ("ATZ")) == 0)                //Reset settings to startup values
 	{
 		loadDefaults();
 		printOK();
 	}
-	else if(strncmp(_commandBuffer, ("ATT "), 4) == 0)
+	else if(strncmp(_commandBuffer, ("ATT "), 4) == 0)      //Get DATETIME from server
 	{
 		
 		EthernetClient *newClient = new EthernetClient();
@@ -816,7 +847,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 			_serial->println(F("COULD NOT CONNECT."));
 		}
 	}
-	else if(strcmp(_commandBuffer, ("AT&W")) == 0)
+	else if(strcmp(_commandBuffer, ("AT&W")) == 0)          //Write settings to EEPROM
 	{
 		saveDefaults();
 #if DEBUG == 1
@@ -824,7 +855,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 #endif
 		printOK();
 	}
-	else if(strcmp(_commandBuffer, ("AT&F")) == 0)
+	else if(strcmp(_commandBuffer, ("AT&F")) == 0)          //Factory Reset
 	{
 		if(strcmp(_lastCommandBuffer, ("AT&F")) == 0)
 		{
@@ -837,7 +868,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 			_serial->println(F("send command again to verify."));
 		}
 	}
-	else if(strcmp(_commandBuffer, ("ATA")) == 0)
+	else if(strcmp(_commandBuffer, ("ATA")) == 0)           //Answer Call
 	{
 		_isConnected = true;
 		_isCommandMode = false;
@@ -884,25 +915,34 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 
 		digitalWrite(DCE_RTS, LOW);
 	}
-	else if(strcmp(_commandBuffer, ("ATD")) == 0)
+	else if(strcmp(_commandBuffer, ("ATD")) == 0)           //Dial Outs
 	{
 		////_isConnected = true;
 	}
-	else if(
-		strncmp(_commandBuffer, ("ATDT "), 5) == 0 ||
-		strncmp(_commandBuffer, ("ATDP "), 5) == 0 ||
-		strncmp(_commandBuffer, ("ATD "), 4) == 0
-		)
-	{
-		if(onDialout != NULL)
-		{
-			onDialout(strstr(_commandBuffer, " ") + 1, this);
-		}
-		else
-		{
-			println(F("onDialout is null"));
-		}
-	}
+  else if(strncmp(_commandBuffer, ("ATDT "), 5) == 0 ||         //Check for valid dial out commands.
+          strncmp(_commandBuffer, ("ATDP "), 5) == 0 ||
+          strncmp(_commandBuffer, ("ATD "), 4) == 0)            
+  {
+    if(onDialout != NULL)
+    {
+      onDialout(strstr(_commandBuffer, " ") + 1, this);         //This is the dialout number or address
+    }
+    else
+    {
+      println(F("onDialout is null"));
+    }
+  }
+  else if(strncmp(_commandBuffer, ("ATDT"), 4) == 0)            
+  {
+    if(onDialout != NULL)
+    {
+      onDialout(strstr(_commandBuffer, "ATDT") + 4, this);
+    }
+    else
+    {
+      println(F("onDialout is null"));
+    }
+  }
 	else if(strncmp(_commandBuffer, ("ATD"), 3) == 0)
 	{
 		if(onDialout != NULL)
@@ -922,7 +962,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 			}
 		}
 	}
-	else if((strcmp(_commandBuffer, ("ATH0")) == 0
+	else if((strcmp(_commandBuffer, ("ATH0")) == 0          //Hang up
 		|| strcmp(_commandBuffer, ("ATH")) == 0))
 	{
 #if DEBUG == 1
@@ -930,14 +970,14 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 #endif
 		disconnect(client);
 	}
-	else if(strcmp(_commandBuffer, ("ATO")) == 0 && 
+	else if(strcmp(_commandBuffer, ("ATO")) == 0 &&         //Return to Data Mode
 		_isConnected)
 	{
 		_isCommandMode = false;
 	}
-	else if(strncmp(_commandBuffer, ("AT"), 2) == 0)
+	else if(strncmp(_commandBuffer, ("AT"), 2) == 0)        //More AT Commands
 	{
-		if(strstr(_commandBuffer, ("E0")) != NULL)
+		if(strstr(_commandBuffer, ("E0")) != NULL)            //Echo on & off
 		{
 			_echoOn = false;
 #if DEBUG == 1
@@ -961,8 +1001,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 		}
 
 
-
-		if(strstr(_commandBuffer, ("Q0")) != NULL)
+		if(strstr(_commandBuffer, ("Q0")) != NULL)          //Quiet Mode on and off
 		{
 			_verboseResponses = false;
 			_quietMode = false;
@@ -979,7 +1018,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 #endif
 		}
 
-		if(strstr(_commandBuffer, ("V0")) != NULL)
+		if(strstr(_commandBuffer, ("V0")) != NULL)            //Verbose mode On and off (Returns the entered value after typing commands)
 		{
 			_verboseResponses = false;
 #if DEBUG == 1
@@ -1020,7 +1059,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 		char temp[100];
 
 		int offset = 0;
-		if((currentS = strstr(_commandBuffer, ("S0="))) != NULL)
+		if((currentS = strstr(_commandBuffer, ("S0="))) != NULL)      // === ATS Commands ===
 		{
 			offset = 3;
 			while(currentS[offset] != '\0'
@@ -1351,7 +1390,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 #endif
 		}
 
-		if((currentS = strstr(_commandBuffer, ("S90="))) != NULL)
+		if((currentS = strstr(_commandBuffer, ("S90="))) != NULL)     //Start of non standard ATS commands
 		{
 			offset =4;
 			while(currentS[offset] != '\0'
@@ -1403,27 +1442,49 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 			}
 		}
 
-		for(int i=1; i<10; ++i)
-		{
-			char reg[6];
-			sprintf(reg, ("S10%u="), i);
-			if((currentS = strstr(_commandBuffer, reg)) != NULL)
-			{
-				int offset = 5;
-				while(currentS[offset] != '\0')
-				{
-					offset++;
-				}
+    for(int i=0; i<10; ++i)                                 //Set Address and save - Note i started at 1 but addresses start at 0 !?
+    {                                                       //Fixed :)
+      char reg[6];
+      sprintf(reg, ("S10%u="), i);
+      if((currentS = strstr(_commandBuffer, reg)) != NULL)
+      {
+        int offset = 5;
+        while(currentS[offset] != '\0')
+        {
+          offset++;
+        }
 
-				memset(temp, 0, 100);
-				strncpy(temp, currentS + 5, offset - 5);
+        memset(temp, 0, 100);
+        strncpy(temp, currentS + 5, offset - 5);
 #if DEBUG == 1
-				lggr.print(reg); lggr.println(temp);
+        lggr.print(reg); lggr.println(temp);
 #endif
-				print(F("SAVED ")); print(reg); print('='); println(temp);
-				writeAddressBook(ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * i), temp);
-			}
-		}
+        print(F("SAVED ")); print(reg); print('='); println(temp);
+        writeAddressBook(ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * i), temp);
+      }
+    }
+    
+    for(int i=0; i<10; ++i)                                 //Set Spoof Number and save
+    {                                                       
+      char reg[6];
+      sprintf(reg, ("S11%u="), i);
+      if((currentS = strstr(_commandBuffer, reg)) != NULL)
+      {
+        int offset = 5;
+        while(currentS[offset] != '\0')
+        {
+          offset++;
+        }
+
+        memset(temp, 0, 100);
+        strncpy(temp, currentS + 5, offset - 5);
+#if DEBUG == 1
+        lggr.print(reg); lggr.println(temp);
+#endif
+        print(F("SAVED ")); print(reg); print('='); println(temp);
+        writeAddressBook(SPOOF_START + (SPOOF_LENGTH * i), temp);
+      }
+    }
 #ifndef __UNO__
 		if(!processCommandBufferExtended(client))
 		{
@@ -1432,7 +1493,7 @@ void ModemBase::processCommandBuffer(EthernetClient *client)
 #ifndef __UNO__
 		}
 #endif
-	}
+	}                                           //============  END OF 'AT' COMMANDS =================
 	else
 	{
 		printResponse("4", F("ERROR"));

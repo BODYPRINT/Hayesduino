@@ -1,0 +1,118 @@
+<div class="wikidoc"><h1>Hayesduino Documentation</h1>
+<a name="contents"></a>
+<h2>Contents</h2><ol><li><a href="#whatisit">What Is It&#63;</a></li>
+<li><a href="#history">History</a></li>
+<li><a href="#hayes">Implemented Hayes Command Set</a>
+<ol><li><a href="#standardhayes">Standard Commands</a></li>
+<li><a href="#extendedhayes">Extended Commands</a></li>
+<li><a href="#settingdefaults">Setting Defaults</a></li>
+<li><a href="#factoryreset">Factory Reset</a></li>
+<li><a href="#nonstandardhayes">Non-Standard Commands</a></li>
+<li><a href="#queries">Queries</a></li></ol></li>
+<li><a href="#hardware">Hardware</a>
+<ol><li><a href="#pinusage">Pin Usage</a></li></ol></li>
+<li><a href="#license">License</a></li>
+<li>Platform-Specific Docs
+<ol><li><a href="https://hayesduino.codeplex.com/wikipage?title=Commodore%20Userport&referringTitle=Documentation">Commodore Userport</a></li>
+<li><a href="https://hayesduino.codeplex.com/wikipage?title=Apple%20II&referringTitle=Documentation">Apple II</a></li>
+<li><a href="https://hayesduino.codeplex.com/wikipage?title=Atari%208-Bit&referringTitle=Documentation">Atari 8-Bit</a></li>
+<li><a href="https://hayesduino.codeplex.com/wikipage?title=RS232&referringTitle=Documentation">RS232</a></li></ol></li></ol>
+<br /><a name="whatisit"></a>
+<h2>What Is It?</h2>
+Hayesduino is an Arduino sketch that provides a bridge between the world of the Internet and small devices that do not have built-in ethernet capabilities.  Old computers, such as the Commodore 64, Apple II and Atari 800 have serial ports, but do not have readily available Internet solutions with wide software support.  While specialized solutions do exist for these platforms, they all require specialized software to use them and do not lend themselves to more general usage such as simply opening a socket, sending some data, and/or receiving some data.<br /><br />Hayesduino bridges this gap by emulating a Hayes compatible modem.  This allows users to initiate Internet communications via sockets that are opened by &quot;dialing&quot; to a hostname and port.  An example would be initiating a telnet session with a host by simply typing <i>atdt hostname:23</i> and waiting for the host to respond.  Using this technique, any online socket can be reached and communicated with.<br /><br />Hayesduino could have accomplished this without emulating a modem, but there needed to be a good way to allow the small machine to receive incoming connections.  The three platforms listed above were all very popular systems for hosting BBS (bulletin board systems) which would accept calls over a telephone line via modem.  Hayesduino simulates the incoming phone call whenever the software receives an inbound connection on port 23 (this is changeable in the code).  When an incoming connection is detected, the Hayesduino will toggle the DCE-DCD line to trigger the remote software to answer the incoming &quot;call&quot;.  In this way a classic BBS can be hooked up directly to the Internet.<br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="history"></a>
+<h2>History</h2>
+Hayesduino started in early 2013 as the firmware for the Comet BBS product which is to be sold as a commercial product.  The owner of the Comet BBS project and Payton Byrd agreed that the firmware would be made open-source as the Comet BBS product is based on the Arduino Uno and thus easily reproducible as a hobby project.  Although the Comet BBS hardware project appears to be stalled, the development of the firmware is not stalled and I, Payton Byrd, have decided to move forward with open-sourcing the firmware as the Hayesduino project.<br /><br /><br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="hayes"></a>
+<h2>Implemented Hayes Command Set</h2>
+<a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="standardhayes"></a>
+<h3>Standard Commands</h3>
+<b>All commands are prefixed with the letters &quot;AT&quot;.  Commands can be chained (but not queries).</b><br /><br /><table><tr><th> Command </td><td> Description </td><td> Uno </td><td> Mega 2560 </th></tr>
+<tr><td> / </td><td> Replay last command </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> A </td><td> Answer Call </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> D </td><td> Dial * </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> DT </td><td> Dial ** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> DP </td><td> Dial ** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> E0 </td><td> Echo Off *** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> E1 </td><td> Echo On </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> H </td><td> Hang Up Call </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> H0 </td><td> Hang Up Call </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> M0 </td><td> Unused </td><td> No </td><td> No </td></tr>
+<tr><td> O </td><td> Return to Data Mode </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> Q0 </td><td> Quiet Mode Off *** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> Q1 </td><td> Quiet Mode On *** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> V0 </td><td> Verbose Mode Off - Returns numeric result codes *** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> V1 </td><td> Verbose Mode On - Returns textual result codes *** </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> X0 </td><td> Unused </td><td> No </td><td> No </td></tr>
+<tr><td> X1 </td><td> Unused </td><td> No </td><td> No </td></tr>
+<tr><td> X2 </td><td> Unused </td><td> No </td><td> No </td></tr>
+<tr><td> &amp;W </td><td> Write settings as default to EEPROM </td><td> Yes </td><td> Yes </td></tr>
+<tr><td> Z </td><td> Reset to default settings </td><td> Yes </td><td> Yes </td></tr></table><br /><br /><i>* Use without a space to dial a phonebook entry.  ex: ATD1 would dial phonebook entry 1</i><br /><i>** Use with a space to dial a hostname or IP address.  ex: ATDT BBS.PAYTONBYRD.COM would dial the hostname on port 23</i><br /><i>*** Saves when AT&amp;W is called</i><br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="extendedhayes"></a>
+<h3>Extended Commands</h3>
+Hayesduino knows of the following S-Register extended commands:<br /><br /><i>* All S-Registers are preserved when performing AT&amp;W.</i><br /><table><tr><th> Command </td><td> Description </td><td> Uno </td><td> Mega 2560 </td><td> Notes </th></tr>
+<tr><td> S0 </td><td> Auto answer, 0 mean answer immediately, &gt; 0 means to answer after the number of rings in S1. </td><td> Yes </td><td> Yes </td><td> </td></tr>
+<tr><td> S1 </td><td> Rings before auto answer </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S2 </td><td> Escape Character </td><td> Yes </td><td> Yes </td><td> Defaults to &#39;+&#39; </td></tr>
+<tr><td> S3 </td><td> Carriage Return Character </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S4 </td><td> Line Feed Character </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S5 </td><td> Backspace Character </td><td> Yes </td><td> Yes </td><td> </td></tr>
+<tr><td> S6 </td><td> Wait Blind Dial </td><td> No </td><td> No </td><td> Not Applicable </td></tr>
+<tr><td> S7 </td><td> Wait for Carrier </td><td> No </td><td> No </td><td> Not Applicable </td></tr>
+<tr><td> S8 </td><td> Pause for Comma </td><td> No </td><td> No </td><td> Not Applicable </td></tr>
+<tr><td> S9 </td><td> CD Response Time </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S10 </td><td> Delay Hangup </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S11 </td><td> DTMF </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S12 </td><td> ESC Guard Time </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S18 </td><td> Test Timer </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S25 </td><td> Delay DTR </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S26 </td><td> Delay RTS to CTS </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S30 </td><td> Inactivity Timer </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr>
+<tr><td> S37 </td><td> Line Speed </td><td> Yes </td><td> Yes </td><td> See <a href="#baudtable">Baud Table</a> Below.  Saves to EEPROM immediately. </td></tr>
+<tr><td> S38 </td><td> Delay Forced </td><td> No </td><td> No </td><td> Value is saved, but currently the feature is not implemented. </td></tr></table><br /><br /><a name="baudtable"></a>
+<h3>Baud Table</h3><table><tr><th> Code </td><td> Speed </th></tr>
+<tr><td> 0, 1, 2, 3 </td><td> 300 Baud </td></tr>
+<tr><td> 5 </td><td> 1200 Baud </td></tr>
+<tr><td> 6, any not listed here </td><td> 2400 Baud </td></tr>
+<tr><td> 8 </td><td> 9600 Baud </td></tr>
+<tr><td> 10 </td><td> 14400 Baud </td></tr>
+<tr><td> 11 </td><td> 28800 Baud </td></tr>
+<tr><td> 12 </td><td> 57600 Baud </td></tr>
+<tr><td> 13 </td><td> 115,200 Baud </td></tr></table><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="factoryreset"></a>
+<h3>Factory Reset</h3>
+To perform a &quot;Factory Reset&quot;, you must issue <i>AT&amp;F</i> to the modem.  The first time you do this it will prompt you to enter <i>AT&amp;F</i> again to confirm your intent to reset the modem to default.  Entering any other command will abort the reset.<br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="nonstandardhayes"></a>
+<h3>Non-Standard Commands</h3>
+<table><tr><th> Command </td><td> Description </td><td> Uno </td><td> Mega 2560 </td><td> Notes </th></tr>
+<tr><td> T </td><td> Get DATETIME </td><td> Yes </td><td> Yes </td><td> Supply server name. Ex: ATT TIME.NIST.GOV </td></tr>
+<tr><td> S90 </td><td> DCD Inverted </td><td> Yes </td><td> Yes </td><td> 0 = Normal, 1 = Invert. 2 = ALWAYS ON,  Saves to EEPROM immediately. </td></tr>
+<tr><td> S100 </td><td> Set Phonebook 0 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S101 </td><td> Set Phonebook 1 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S102 </td><td> Set Phonebook 2 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S103 </td><td> Set Phonebook 3 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S104 </td><td> Set Phonebook 4 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S105 </td><td> Set Phonebook 5 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S106 </td><td> Set Phonebook 6 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S107 </td><td> Set Phonebook 7 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S108 </td><td> Set Phonebook 8 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S109 </td><td> Set Phonebook 9 </td><td> Yes </td><td> Yes </td><td> Sets a hostname or IP address to the phonebook. </td></tr>
+<tr><td> S200 </td><td> Set Baud Rate </td><td> Yes </td><td> Yes </td><td> Accepts baud rate as whole number, does not save to EEPROM </td></tr>
+<tr><td> S300 - S305 </td><td> Bytes of MAC address </td><td> Yes </td><td> Yes </td><td> Saves immediately. </td></tr>
+<tr><td> S306 - S309 </td><td> Bytes of IP Address </td><td> Yes </td><td> Yes </td><td> Saves immediately. </td></tr>
+<tr><td> S310 - S313 </td><td> Bytes of Gateway Address </td><td> Yes </td><td> Yes </td><td> Saves immediately. </td></tr>
+<tr><td> S314 - S317 </td><td> Bytes of DNS Address </td><td> Yes </td><td> Yes </td><td> Saves immediately. </td></tr>
+<tr><td> S318 </td><td> Use DHCP </td><td> Yes </td><td> Yes </td><td> 0 = No, 1 = Yes, Saves immediately. </td></tr></table><br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="queries"></a>
+<h3>Queries</h3>
+<a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="hardware"></a>
+<h2>Hardware</h2>
+<a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="pinusage"></a>
+<h3>Pin Usage</h3>
+<table><tr><th> Function </td><td> Uno </td><td> Mega </th></tr>
+<tr><td> DCE_CTS </td><td> 2 </td><td> 22 </td></tr>
+<tr><td> DCE_DCD </td><td> 7 </td><td> 23 </td></tr>
+<tr><td> DCE_RI </td><td> 4 </td><td> 24 </td></tr>
+<tr><td> DCE_DTR </td><td> 5 </td><td> 25 </td></tr>
+<tr><td> DCE_RTS </td><td> 6 </td><td> 27 </td></tr>
+<tr><td> DSR </td><td> 3 </td><td> 29 </td></tr>
+<tr><td> DCE_Tx </td><td> 0 </td><td> 19 </td></tr>
+<tr><td> DCE_Rx </td><td> 1 </td><td> 18 </td></tr>
+<tr><td> GROUND </td><td> GND </td><td> GND </td></tr>
+<tr><td> Carrier Detect </td><td> 8 </td><td> 8 </td></tr></table><br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /><a name="license"></a>
+<h2>License</h2>
+Hayesduino is released under the LGPL.  Why?  Because EthernetClient and EthernetServer both had to be modified because they essentially suck, and these files are under the LGPL.  I started to write my own drivers but ran out of time (and will) to do it right, so I decided to go this route.<br /><br /><a href="#contents">Contents</a> | <a href="https://hayesduino.codeplex.com/wikipage?referringTitle=Documentation">Home</a><br /></div><div class="ClearBoth"></div>

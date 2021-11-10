@@ -1,0 +1,13 @@
+<div class="wikidoc"><h1>Commodore Userport</h1>
+The Commodore userport is not a true RS232 device, but RS232 communication is implemented in software in the Kernal of the computer.  The userport provides all of the lines necessary for RS232 communications, but it is all TTL-level.<br /><br />Here is a breakdown of the userport pins used to emulate RS232 communications.<br /><br /><img src="http://www.hardwarebook.info/images/9/96/Dzm12dreh.png" /><br /><br /><table><tr><th> Commodore Func. </th><th> Direction </th><th> Modem Func. </th><th> Pin </th><th> Name </th><th> Description </th><th> Uno </th><th> Mega 2560 </th></tr>
+<tr><td> GND </td><td> </td><td> GND </td><td> A </td><td> GND </td><td> Protective Ground </td><td> GND </td><td> GND </td></tr>
+<tr><td> RxD </td><td> &lt;-- </td><td> TxD </td><td> B + C </td><td> FLAG2 + PB0 </td><td> Receive Data (Must be applied to both pins) </td><td> 0 </td><td> 19 </td></tr>
+<tr><td> RTS </td><td> --&gt; </td><td> CTS </td><td> D </td><td> PB1 </td><td> Ready to Send </td><td> 2 </td><td> 22 </td></tr>
+<tr><td> DTR </td><td> --&gt; </td><td> DCD </td><td> E </td><td> PB2 </td><td> Data Terminal Ready </td><td> 7 </td><td> 23 </td></tr>
+<tr><td> RI </td><td> &lt;-- </td><td> RI </td><td> F </td><td> PB3 </td><td> Ring Indicator </td><td> 4 </td><td> 24 </td></tr>
+<tr><td> DCD </td><td> &lt;-- </td><td> DTR </td><td> H </td><td> PB4 </td><td> Data Carrier Detect </td><td> 5 </td><td> 25 </td></tr>
+<tr><td> CTS </td><td> &lt;-- </td><td> RTS </td><td> K </td><td> PB6 </td><td> Clear to Send </td><td> 6 </td><td> 26 </td></tr>
+<tr><td> DSR </td><td> Unused </td><td> DSR </td><td> L </td><td> PB7 </td><td> Data Set Ready </td><td> 3 </td><td> 27 </td></tr>
+<tr><td> TxD </td><td> --&gt; </td><td> RxD </td><td> M </td><td> PA2 </td><td> Transmit Data </td><td> 1 </td><td> 18 </td></tr>
+<tr><td> GRND </td><td> </td><td> GRND </td><td> N </td><td> GRND </td><td> Signal Ground </td><td> GND </td><td> GND </td></tr></table><br />
+<h4><i>credit: <a href="https://hayesduino.codeplex.com/wikipage?title=http%3a%2f%2fwww.gamesx.com%2fhwb%2fco_C64Rs232UserPort.html&referringTitle=Commodore%20Userport">http&#58;&#47;&#47;www.gamesx.com&#47;hwb&#47;co_C64Rs232UserPort.html</a></i></h4></div><div class="ClearBoth"></div>

@@ -1,10 +1,17 @@
-/***********************************************
+ /***********************************************
 HAYESDUINO PROJECT - COPYRIGHT 2013, PAYTON BYRD
 
 Project homepage: http://hayesduino.codeplex.com
 License: http://hayesduino.codeplex.com/license
 ***********************************************/
+
+// Copy the supplied modified W5100 library files for Hayesduino before compiling
+//Replace w5100.h & w5100.cpp in...
+//   Documents\Arduino\libraries\Ethernet\src\utility
+//before compiling
+
 #include "Arduino.h"
+#include "Display.h"
 
 #ifdef UBRR1H
 #define __MEGA__
@@ -32,23 +39,25 @@ License: http://hayesduino.codeplex.com/license
 
 #include <SD.h>
 
-
 #if DEBUG == 1 && !defined(__UNO__)
 #include "Logger.h"
 #endif
 
-int IEC_ATN_IN = A5;
-int IEC_RESET_IN = A4;
-int IEC_CLK_IN = A3;
-int IEC_CLK_OUT = A2;
-int IEC_DATA_IN = A1;
-int IEC_DATA_OUT = A0;
+#define COUNT_HIT 200
+int my_counter = 0;
 
-int SPI_MOSI = 11;
-int SPI_MISO = 12;
-int SPI_CLK = 13;
-int CS_WIZ = 10;
-int CS_FLASH = 9;
+//int IEC_ATN_IN = A5;
+//int IEC_RESET_IN = A4;
+//int IEC_CLK_IN = A3;
+//int IEC_CLK_OUT = A2;
+//int IEC_DATA_IN = A1;
+//int IEC_DATA_OUT = A0;
+//
+//int SPI_MOSI = 11;
+//int SPI_MISO = 12;
+//int SPI_CLK = 13;
+//int CS_WIZ = 10;
+//int CS_FLASH = 9;
 
 boolean statuses[4];
 
@@ -57,12 +66,22 @@ byte mac[6];
 
 ModemBase modem; 
 EthernetClient client;
-EthernetServer EthServer(23);
+EthernetServer EthServer(PORT_NUMER);
 
 File myLogFile;
 
 int currentClient = MAX_SOCK_NUM;
 
+char * getAddressBook(uint16_t address)                    //Create local version for spoof conversion
+{
+  static char result[91];
+  for(int i=0; i < 90; ++i)
+  {
+    result[i] = EEPROM.read(address + i);
+  }
+
+  return result;
+}
 
 void disconnectClient(EthernetClient *client)
 {
@@ -72,29 +91,45 @@ void disconnectClient(EthernetClient *client)
 	myLogFile.close();
 }
 
-void dialout(char * host, ModemBase *modm)
+void dialout(char * host, ModemBase *modm)              //Take 2 - spoof intercept here instead
 {
 	char* index;
-	uint16_t port = 23;
-	String hostname = String(host);
-	char hostnamebuffer[81];
+	uint16_t port = PORT_NUMER;
+  String hostname = String(host);
+  String spoofNumber;
+  char hostnamebuffer[81];
 
 	for(int i=0; i<81; ++i) hostnamebuffer[i] = '\0';
+  
+  for(byte i=0; i<10; i++)                             //Spoof loops
+  {
+    spoofNumber=getAddressBook(SPOOF_START + (i * SPOOF_LENGTH));
+    if (hostname == spoofNumber)
+    {
+      hostname = getAddressBook(ADDRESS_BOOK_START + (i * ADDRESS_BOOK_LENGTH));  //Replace the number with the address
+      strcpy(host, hostname.c_str());
+//      modm->println((String)"Spoofed full address = " + host);      //Check we have the spoofed address
+    }
+  }
+  
+//  modm->println("TEST");
+//  modm->println(strstr(host, ":"));
 
 	if((index = strstr(host, ":")) != NULL)
 	{
 		index[0] = '\0';
 		hostname = String(host);
 		port = atoi(index + 1);
+//    modm->println((String)"New hostname = " + hostname + "  - port = " + port);      //Check we have the spoofed address and port
 	}
 
 	client = EthernetClient();
 
-	if(hostname == "5551212")
-	{
-		hostname = "qlink.lyonlabs.org";
-		port = 5190;
-	}
+//	if(hostname == "5551212")                     //Built in spoof!!
+//	{
+//		hostname = "qlink.lyonlabs.org";
+//		port = 5190;
+//	}
 
 	hostname.toCharArray(hostnamebuffer, sizeof(hostnamebuffer), 0U);
 
@@ -110,7 +145,7 @@ void dialout(char * host, ModemBase *modm)
 		//modm->print(F("connecting to: "));
 		//remote_addr.printTo(*modm);
 		//modm->println();
-
+    
 		if(client.connect(remote_addr, port))
 		{
 			currentClient = client.getSock();
@@ -133,24 +168,23 @@ void dialout(char * host, ModemBase *modm)
 void setup()
 {
 
-	pinMode(IEC_ATN_IN, INPUT);
-	pinMode(IEC_RESET_IN, INPUT);
-	pinMode(IEC_DATA_IN, INPUT);
-	pinMode(IEC_CLK_IN, INPUT);
-	pinMode(IEC_DATA_OUT, OUTPUT);
-	pinMode(IEC_CLK_OUT, OUTPUT);
-
-	pinMode(SPI_MOSI, OUTPUT);
-	pinMode(SPI_MISO, INPUT);
-	pinMode(SPI_CLK, OUTPUT);
-	pinMode(CS_FLASH, OUTPUT);
-	pinMode(CS_WIZ, OUTPUT);
+//	pinMode(IEC_ATN_IN, INPUT);
+//	pinMode(IEC_RESET_IN, INPUT);
+//	pinMode(IEC_DATA_IN, INPUT);
+//	pinMode(IEC_CLK_IN, INPUT);
+//	pinMode(IEC_DATA_OUT, OUTPUT);
+//	pinMode(IEC_CLK_OUT, OUTPUT);
+//
+//	pinMode(SPI_MOSI, OUTPUT);
+//	pinMode(SPI_MISO, INPUT);
+//	pinMode(SPI_CLK, OUTPUT);
+//	pinMode(CS_FLASH, OUTPUT);
+//	pinMode(CS_WIZ, OUTPUT);
 
 	pinMode(53, OUTPUT);
 	digitalWrite(10, HIGH);
 	pinMode(4, OUTPUT);
 	digitalWrite(4, HIGH);
-
 #ifndef __UNO__
 	if(Serial) Serial.begin(115200);
 	Serial.println("Initialized serial.");
@@ -161,11 +195,7 @@ void setup()
 #else
 	Serial1.begin(2400);
 	modem.begin(&Serial1, &disconnectClient, &dialout);
-	//modem.factoryReset();
-
 #endif
-
-	//Serial.println("Before SD.begin");
 
 	//if(!SD.begin(4))
 	//{
@@ -233,14 +263,34 @@ void setup()
 #endif
 
 	//modem.println(digitalRead(STATUS_LED));
+
+#if USE_DISPLAY
+  DisplaySetup();
+  DisplayMenu();
+#endif
+
 }
+
+//=========================== END SETUP =========================
 
 #if DEBUG == 1
 char buffer[41];
 #endif
 
+//=========================== LOOOOP =========================
+//=========================== LOOOOP =========================
+
 void loop()
 {
+#if USE_DISPLAY
+  my_counter++; 
+  if(my_counter == COUNT_HIT)
+  {
+    if (NeedTouch())readTouch();
+    DisplaySwap(true); //Flash the LED
+  }
+  Debug(false); //Display touch information
+#endif
 	if(currentClient != MAX_SOCK_NUM)
 	{
 		client = EthernetClient(currentClient);
@@ -357,9 +407,22 @@ void loop()
 
 	//digitalWrite(DCE_RTS, HIGH);
 
+#if USE_DISPLAY
+  //Test for touch screen a few times a second
+  byte ts = getTouchStage();
+ 
+  if (my_counter == COUNT_HIT)
+  {
+//    int tch = getPressure();
+//    if(tch>0)processTouch();
+    processTouch();
+    my_counter=0;
+    }
+#endif
+
 }
 
-void resetToModemDefaults()
-{
-	modem.resetToDefaults();
-}
+//void resetToModemDefaults()
+//{
+//	modem.resetToDefaults();
+//}

@@ -11,7 +11,7 @@ License: http://hayesduino.codeplex.com/license
 #ifdef __UNO__
 #define DEBUG 0
 #else
-#define DEBUG 1
+#define DEBUG 0
 #endif
 
 #endif

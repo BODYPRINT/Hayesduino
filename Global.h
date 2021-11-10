@@ -7,6 +7,8 @@ License: http://hayesduino.codeplex.com/license
 #ifndef __GLOBAL_H
 #define __GLOBAL_H
 
+#define PORT_NUMER  6300  //23
+
 #define MAC_1	0
 #define MAC_2	1
 #define MAC_3	2
@@ -58,7 +60,7 @@ License: http://hayesduino.codeplex.com/license
 #define S90_ADDRESS		41
 
 #define ADDRESS_BOOK_START	42
-#define ADDRESS_BOOK_LENGTH	30
+#define ADDRESS_BOOK_LENGTH	40
 #define	ADDRESS_BOOK_0		ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * 0)
 #define	ADDRESS_BOOK_1		ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * 1)
 #define	ADDRESS_BOOK_2		ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * 2)
@@ -70,5 +72,17 @@ License: http://hayesduino.codeplex.com/license
 #define	ADDRESS_BOOK_8		ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * 8)
 #define	ADDRESS_BOOK_9		ADDRESS_BOOK_START + (ADDRESS_BOOK_LENGTH * 9)
 
+#define SPOOF_START   442
+#define SPOOF_LENGTH  10
+#define SPOOF_0 SPOOF_START + (SPOOF_LENGTH * 0)
+#define SPOOF_1 SPOOF_START + (SPOOF_LENGTH * 1)
+#define SPOOF_2 SPOOF_START + (SPOOF_LENGTH * 2)
+#define SPOOF_3 SPOOF_START + (SPOOF_LENGTH * 3)
+#define SPOOF_4 SPOOF_START + (SPOOF_LENGTH * 4)
+#define SPOOF_5 SPOOF_START + (SPOOF_LENGTH * 5)
+#define SPOOF_6 SPOOF_START + (SPOOF_LENGTH * 6)
+#define SPOOF_7 SPOOF_START + (SPOOF_LENGTH * 7)
+#define SPOOF_8 SPOOF_START + (SPOOF_LENGTH * 8)
+#define SPOOF_9 SPOOF_START + (SPOOF_LENGTH * 9)
 
 #endif

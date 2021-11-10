@@ -4,8 +4,8 @@ HAYESDUINO PROJECT - COPYRIGHT 2013, PAYTON BYRD
 Project homepage: http://hayesduino.codeplex.com
 License: http://hayesduino.codeplex.com/license
 ***********************************************/
-#include "w5100.h"
-#include "socket.h"
+#include "utility/w5100.h"
+#include "utility/socket.h"
 
 extern "C" {
   #include "string.h"
