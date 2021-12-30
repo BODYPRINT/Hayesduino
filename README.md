@@ -1,4 +1,4 @@
-This project is a fork of the Hayesduino project by Payton Byrd for which he receives all credit for this work.
+This project is a fork of the Hayesduino project by Payton Byrd.
 
 
 What Is It?
