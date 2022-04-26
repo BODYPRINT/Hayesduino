@@ -29,10 +29,10 @@ License: http://hayesduino.codeplex.com/license
 #define DTE_RTS  2  // Orange
 #define DCE_CTS  2
 #define DTE_DTR  7  // White/Green
-#define DCE_DCD	 7
+#define DCE_DTR	 7
 #define DCE_RI   4  // White/Brown
 #define DTE_DCD  5  // Brown
-#define DCE_DTR  5
+#define DCE_DCD  5
 #define DTE_CTS  6  // White/Orange
 #define DCE_RTS  6
 #define DTE_DSR  3  // White/Blue
@@ -43,10 +43,10 @@ License: http://hayesduino.codeplex.com/license
 #define DTE_RTS  22  // Orange
 #define DCE_CTS  22
 #define DTE_DTR  23  // White/Green
-#define DCE_DCD  23
+#define DCE_DTR  23
 #define DCE_RI   24  // White/Brown
 #define DTE_DCD  25  // Brown
-#define DCE_DTR  25
+#define DCE_DCD  25
 #define DTE_CTS  27  // White/Orange
 #define DCE_RTS  27
 #define DTE_DSR  29  // White/Blue
@@ -56,10 +56,10 @@ License: http://hayesduino.codeplex.com/license
 //#define DTE_RTS  2  // Orange
 //#define DCE_CTS  2
 //#define DTE_DTR  7  // White/Green
-//#define DCE_DCD	 7
+//#define DCE_DTR	 7
 //#define DCE_RI   4  // White/Brown
 //#define DTE_DCD  5  // Brown
-//#define DCE_DTR  5
+//#define DCE_DCD  5
 //#define DTE_CTS  6  // White/Orange
 //#define DCE_RTS  6
 //#define DTE_DSR  3  // White/Blue
